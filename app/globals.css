@@ -45,8 +45,8 @@
   --shadow-lg: 0 10px 25px -5px rgba(168, 85, 247, 0.35);
 
   /* ========== BADGE VARIANTS - PROMO ========== */
-  --badge-promo-bg: #6D28D9;
-  --badge-promo-text: #E9D5FF;
+  --badge-promo-bg: #065F46;
+  --badge-promo-text: #D1FAE5;
 
   /* ========== BADGE VARIANTS - INCREASE ========== */
   --badge-increase-bg: #EA580C;
@@ -61,12 +61,12 @@
   --badge-markdown-text: #FFE4E6;
 
   /* ========== CONFIDENCE BADGES ========== */
-  --badge-high-bg: #6D28D9;
-  --badge-high-text: #E9D5FF;
-  --badge-medium-bg: #EA580C;
-  --badge-medium-text: #FFFBEB;
-  --badge-low-bg: #9F1239;
-  --badge-low-text: #FFE4E6;
+  --badge-high-bg: #065F46;
+  --badge-high-text: #D1FAE5;
+  --badge-medium-bg: #92400E;
+  --badge-medium-text: #FEF3C7;
+  --badge-low-bg: #7F1D1D;
+  --badge-low-text: #FEE2E2;
 
   /* ========== LEGACY SUPPORT ========== */
   --background: var(--surface);

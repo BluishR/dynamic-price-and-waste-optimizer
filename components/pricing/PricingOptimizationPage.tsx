@@ -11,15 +11,15 @@ import { Badge } from '@/components/ui/Badge';
 import { RadioGroup } from '@/components/ui/RadioGroup';
 import { Modal } from '@/components/ui/Modal';
 import {
-  mockPricingProducts,
-  PricingProduct,
-  PricingRecommendation,
-  ConfidenceLevel,
+    mockPricingProducts,
+    PricingProduct,
+    PricingRecommendation,
+    ConfidenceLevel,
+    SimulationScenario,
 } from '@/lib/mockPricingProducts';
 
 type PrimaryGoal = 'maximize' | 'reduce' | 'balance';
 type Mode = 'advisor' | 'autopilot';
-type SimulationScenario = 'Current price' | 'Optimized Price' | 'Promo'; 
 
 interface ApprovalPayload {
   primaryGoal: PrimaryGoal;
@@ -123,7 +123,7 @@ export function PricingOptimizationPage() {
 
             console.log('Simulation Applied:', {
             productId: activeProduct.id,
-            productName: activeProduct.name,
+            productName: activeProduct.description,
             selectedScenario,
             });
 
@@ -166,32 +166,31 @@ export function PricingOptimizationPage() {
 
     // Helper functions
     const getRecommendationBadgeVariant = 
-        (rec: PricingRecommendation): 'promo' | 'increase' | 'decrease' | 'markdown' => 
-            {
+        (rec: PricingRecommendation): 'promo' | 'increase' | 'decrease' | 'markdown' => {
             switch (rec) {
-                case 'Promo':
-                return 'promo';
-                case 'Increase':
-                return 'increase';
-                case 'Decrease':
-                return 'decrease';
-                case 'Markdown':
-                return 'markdown';
+                case 'promo':
+                    return 'promo';
+                case 'increase':
+                    return 'increase';
+                case 'decrease':
+                    return 'decrease';
+                case 'markdown':
+                    return 'markdown';
                 default:
-                return 'decrease';
+                    return 'decrease';
             }
         };
 
-    const getConfidenceBadgeVariant = 
-        (conf: ConfidenceLevel): 'high' | 'medium' | 'low' => 
-            {
+        const getConfidenceBadgeVariant = (conf?: ConfidenceLevel): 'high' | 'medium' | 'low' => {
             switch (conf) {
                 case 'High':
-                return 'high';
+                    return 'high';
                 case 'Medium':
-                return 'medium';
+                    return 'medium';
                 case 'Low':
-                return 'low';
+                    return 'low';
+                default:
+                    return 'medium';
             }
         };
 
@@ -345,7 +344,7 @@ export function PricingOptimizationPage() {
                 />
                 
                     {!primaryGoal && (
-                        <p className="mt-2 text-xs font-medium" style={{ color: '#DC2626' }}>
+                        <p className="mt-2 text-xs font-medium" style={{ color: '#ffffff' }}>
                         Please select a primary goal (required).
                         </p>
                     )}
@@ -409,7 +408,7 @@ export function PricingOptimizationPage() {
 
                     
                     {!mode && (
-                        <p className="mt-2 text-xs font-medium" style={{ color: '#DC2626' }}>
+                        <p className="mt-2 text-xs font-medium" style={{ color: '#ffffff' }}>
                         Please select a mode (required).
                         </p>
                     )}
@@ -449,6 +448,9 @@ export function PricingOptimizationPage() {
                             </th>
                             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
                                 AI Recommendation
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
+                                Recommended Scope
                             </th>
                             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
                                 Current Price
@@ -510,7 +512,7 @@ export function PricingOptimizationPage() {
                                         checked={isSelected}
                                         onChange={() => handleToggleRow(product.id)}
                                         onClick={(e) => e.stopPropagation()}
-                                        aria-label={`Select ${product.name}`}
+                                        aria-label={`Select ${product.description}`}
                                         className="w-4 h-4 rounded"
                                         style={{ accentColor: 'var(--primary)' }}
                                     />
@@ -521,11 +523,11 @@ export function PricingOptimizationPage() {
                                     <div className="flex items-center gap-3">
                                     <img
                                         src={product.imageUrl}
-                                        alt={product.name}
+                                        alt={product.description}
                                         className="w-10 h-10 rounded-full object-cover"
                                     />
                                     <span className="font-medium" style={{ color: 'var(--text-dark)' }}>
-                                        {product.name}
+                                        {product.description}
                                     </span>
                                     </div>
                                 </td>
@@ -534,11 +536,16 @@ export function PricingOptimizationPage() {
                                 <td className="px-4 py-3">
                                     <Badge
                                     variant={getRecommendationBadgeVariant(
-                                        product.aiRecommendation
+                                        product.action
                                     )}
                                     >
-                                    {product.aiRecommendation}
+                                    {product.action}
                                     </Badge>
+                                </td>
+
+                                {/* Recommended Scope */}
+                                <td className="px-4 py-3">
+                                    {product.recommendedScope.level}
                                 </td>
 
                                 {/* Current Price */}
@@ -548,7 +555,7 @@ export function PricingOptimizationPage() {
 
                                 {/* Recommended Price */}
                                 <td className="px-4 py-3 font-medium" style={{ color: 'var(--text-dark)' }}>
-                                    {product.recommendedPrice}
+                                    {product.finalRecommendedPrice}
                                 </td>
 
                                 {/* User Adjusted Price */}
@@ -585,7 +592,7 @@ export function PricingOptimizationPage() {
 
                                 {/* Reason */}
                                 <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
-                                    {product.reason}
+                                    {product. reasonSignals}
                                 </td>
 
                                 {/* Expected Impact */}
@@ -656,7 +663,7 @@ export function PricingOptimizationPage() {
             {/* Modals */}
             <Modal
                 open={!!activeProduct}
-                title={activeProduct?.name}
+                title={activeProduct?.description}
                 onClose={closeModal}
                 >
                 {activeProduct && (
@@ -665,7 +672,7 @@ export function PricingOptimizationPage() {
                     <div className="flex flex-col sm:flex-row gap-5 items-start">
                         <img
                         src={activeProduct.imageUrl}
-                        alt={activeProduct.name}
+                        alt={activeProduct.description}
                         className="w-48 h-48 rounded-xl object-cover shrink-0"
                         style={{ backgroundColor: 'var(--surface-2)' }}
                         />
