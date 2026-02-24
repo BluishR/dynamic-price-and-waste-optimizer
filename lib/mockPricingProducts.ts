@@ -49,7 +49,7 @@ export const mockPricingProducts: PricingProductsResponse = {
   {
       id: 'SCENARIO_PROMO_SCOPE_NATIONAL',
       itemId: 1013948,
-      description: 'HOMEBRAND FINEST CLOUDY APPLE JUICE 500ML (PROMO + NATIONAL SCOPE)',
+      description: 'HOMEBRAND FINEST CLOUDY APPLE JUICE 500ML',
       recommendedScope: { level: 'national', region: 'NATIONAL', store: null },
       action: 'promo',
       currentPrice: '2.15',

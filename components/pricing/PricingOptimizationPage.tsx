@@ -17,6 +17,8 @@ import {
     ConfidenceLevel,
     SimulationScenario,
 } from '@/lib/mockPricingProducts';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 type PrimaryGoal = 'maximize' | 'reduce' | 'balance';
 type Mode = 'advisor' | 'autopilot';
@@ -149,6 +151,12 @@ export function PricingOptimizationPage() {
             });
 
             closeModal();
+            toast.success(`Simulation Applied for ${activeProduct.description}`, {
+                position: "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                theme: "colored"
+            });
             setSelectedScenario(null);
         };
 
