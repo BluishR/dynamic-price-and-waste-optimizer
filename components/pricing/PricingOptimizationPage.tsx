@@ -116,18 +116,40 @@ export function PricingOptimizationPage() {
     const closeModal = () => setActiveProduct(null);
     const openModal = (product: PricingProduct) => setActiveProduct(product);
 
-    // handler for modal simulation table
     const handleApplySimulation = 
         () => {
             if (!activeProduct || !selectedScenario) return;
 
-            console.log('Simulation Applied:', {
-            productId: activeProduct.id,
-            productName: activeProduct.description,
-            selectedScenario,
+            const selectedScenarioRow = activeProduct.simulation?.find(
+                (row) => row.scenario === selectedScenario
+            );
+
+            if (!selectedScenarioRow) return;
+
+            const newPrice = selectedScenarioRow.price.toString();
+
+            setProducts((prevProducts) =>
+                prevProducts.map((product) =>
+                    product.id === activeProduct.id
+                        ? { ...product, currentPrice: newPrice }
+                        : product
+                )
+            );
+
+            setActiveProduct({
+                ...activeProduct,
+                currentPrice: newPrice,
             });
 
-            alert(`Applied scenario: ${selectedScenario}`);
+            console.log('Simulation Applied:', {
+                productId: activeProduct.id,
+                productName: activeProduct.description,
+                selectedScenario,
+                newPrice,
+            });
+
+            closeModal();
+            setSelectedScenario(null);
         };
 
     const handleSelectAll = 
