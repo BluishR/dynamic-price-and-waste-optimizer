@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { Pencil, Info, ArrowLeft } from 'lucide-react';
+import { Pencil, Info, ArrowLeft, ChevronDown, Search } from 'lucide-react';
 import { Tooltip } from '@/components/ui/Tooltip';
 
 import { Card } from '@/components/ui/Card';
@@ -17,8 +17,6 @@ import {
     ConfidenceLevel,
     SimulationScenario,
 } from '@/lib/mockPricingProducts';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 type PrimaryGoal = 'maximize' | 'reduce' | 'balance';
 type Mode = 'advisor' | 'autopilot';
@@ -87,6 +85,9 @@ export function PricingOptimizationPage() {
 
     const [products, setProducts] = useState<PricingProduct[]>(mockPricingProducts.products);
 
+    const [scopeDropdownOpen, setScopeDropdownOpen] = useState(false);
+    const [scopeSearch, setScopeSearch] = useState('');
+    const [selectedScope, setSelectedScope] = useState<string>('all');
 
     /*
 
@@ -105,6 +106,17 @@ export function PricingOptimizationPage() {
     const allSelected = products.length > 0 && selectedRows.size === products.length;
     const someSelected = selectedRows.size > 0 && selectedRows.size < products.length;
 
+    // filter dropdown in table
+    const RecommendedScopes = [
+        { label: 'All recommended scope', value: 'all' },
+        { label: 'National', value: 'national' },
+        { label: 'Regional', value: 'regional' },
+        { label: 'Store', value: 'store' },
+    ]
+
+    const filteredScopes = RecommendedScopes.filter((scope) =>
+        scope.label.toLowerCase().includes(scopeSearch.toLowerCase())
+    );
 
     /*
 
@@ -142,7 +154,8 @@ export function PricingOptimizationPage() {
                 ...activeProduct,
                 currentPrice: newPrice,
             });
-
+            
+            
             console.log('Simulation Applied:', {
                 productId: activeProduct.id,
                 productName: activeProduct.description,
@@ -151,12 +164,6 @@ export function PricingOptimizationPage() {
             });
 
             closeModal();
-            toast.success(`Simulation Applied for ${activeProduct.description}`, {
-                position: "top-right",
-                autoClose: 2000,
-                hideProgressBar: true,
-                theme: "colored"
-            });
             setSelectedScenario(null);
         };
 
@@ -314,7 +321,7 @@ export function PricingOptimizationPage() {
 
   return (
         <div className="min-h-screen p-6" style={{ backgroundColor: 'var(--bg)' }}>
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-screen-xl mx-auto">
         {/* Back Button (Glass / Gamified) */}
         <button
         onClick={() => router.back()}
@@ -453,7 +460,73 @@ export function PricingOptimizationPage() {
                 {canShowTable ? (
                 <>
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        {/* recommended scope filter */}
+                            <div>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-white">Recommended Scope</label>
+
+                                    <div className="relative">
+                                    {/* dropdown button */}
+                                    <button
+                                        onClick={() => setScopeDropdownOpen(!scopeDropdownOpen)}
+                                        className="w-full px-3 py-2 rounded-md border bg-white/10 text-white flex justify-between items-center hover:border-white/50"
+                                    >
+                                        {RecommendedScopes.find(scope => scope.value === selectedScope)?.label ||
+                                        "All recommended scopes"}
+
+                                        <ChevronDown
+                                        size={16}
+                                        className={`${scopeDropdownOpen ? "rotate-180" : ""} transition-transform`}
+                                        />
+                                    </button>
+
+                                    {/* drropdown */}
+                                    {scopeDropdownOpen && (
+                                        <div className="absolute top-full mt-2 w-full rounded-md border bg-[#1a0b2e] text-white z-30">
+                                        
+                                        {/* search box */}
+                                        <div className="p-2 border-b border-white/20">
+                                            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-white/5 border border-white/20">
+                                            <Search size={14} className="text-white/60" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search scopes..."
+                                                value={scopeSearch}
+                                                onChange={(e) => setScopeSearch(e.target.value)}
+                                                className="flex-1 bg-transparent text-sm outline-none placeholder:text-white/40"
+                                            />
+                                            </div>
+                                        </div>
+
+                                        {/* liist items */}
+                                        <div className="max-h-40 overflow-y-auto">
+                                            {filteredScopes.map((scope) => (
+                                            <button
+                                                key={scope.value}
+                                                onClick={() => {
+                                                setSelectedScope(scope.value);
+                                                setScopeDropdownOpen(false);
+                                                setScopeSearch("");
+                                                }}
+                                                className={`w-full text-left px-4 py-2 text-sm ${
+                                                selectedScope === scope.value
+                                                    ? "bg-violet-600/30 text-white font-medium"
+                                                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                                                }`}
+                                            >
+                                                {scope.label}
+                                            </button>
+                                            ))}
+                                        </div>
+                                        </div>
+                                    )}
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                        <div className="overflow-x-auto">
+                        <table className="w-full table-auto">
                         {/* Table Header */}
                         <thead>
                             <tr className="border-b" style={{ 
@@ -505,7 +578,10 @@ export function PricingOptimizationPage() {
 
                         {/* Table Body */}
                         <tbody>
-                            {products.map((product, index) => {
+                            {products.filter(product => {
+                                if (selectedScope === 'all') return true;
+                                return product.recommendedScope.level === selectedScope;
+                            }).map((product, index) => {
                             const isSelected = selectedRows.has(product.id);
                             const userPrice = userAdjustedPrices[product.id] || '';
 
@@ -622,7 +698,7 @@ export function PricingOptimizationPage() {
 
                                 {/* Reason */}
                                 <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
-                                    {product. reasonSignals}
+                                    {product.reasonSignals}
                                 </td>
 
                                 {/* Expected Impact */}
@@ -643,6 +719,7 @@ export function PricingOptimizationPage() {
                             })}
                         </tbody>
                         </table>
+                    </div>
                     </div>
 
                     {/* Footer with Action Button */}
