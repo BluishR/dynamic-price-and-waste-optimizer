@@ -18,6 +18,9 @@ import {
     SimulationScenario,
 } from '@/lib/mockPricingProducts';
 
+import Toast from '@/components/toast/Toast';
+import { ToastType } from '@/components/toast/types';
+
 type PrimaryGoal = 'maximize' | 'reduce' | 'balance';
 type Mode = 'advisor' | 'autopilot';
 
@@ -130,6 +133,10 @@ export function PricingOptimizationPage() {
     const closeModal = () => setActiveProduct(null);
     const openModal = (product: PricingProduct) => setActiveProduct(product);
 
+    const [toast, setToast] = useState<{ msg: string; type: ToastType } | null>(null);
+    const showToast = (msg: string, type: ToastType) => {
+    setToast({ msg, type });
+  };
     const handleApplySimulation = 
         () => {
             if (!activeProduct || !selectedScenario) return;
@@ -155,6 +162,10 @@ export function PricingOptimizationPage() {
                 currentPrice: newPrice,
             });
             
+            setToast({ 
+                msg: `Simulation applied!`, 
+                type: "success" 
+            });
             
             console.log('Simulation Applied:', {
                 productId: activeProduct.id,
@@ -462,15 +473,16 @@ export function PricingOptimizationPage() {
                     <div className="overflow-x-auto">
                         {/* recommended scope filter */}
                             <div>
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-white">Recommended Scope</label>
+                                <div className="mb-4">
+                                <div className="p-6 rounded-xl" style={{ backgroundColor: 'var(--secondary-light-bg)', border: '1px solid var(--secondary)' }}>
+                                    <label className="font-semibold text-dark">Recommended Scope</label>
 
-                                    <div className="relative">
+                                    <div className="relative mt-2">
                                     {/* dropdown button */}
                                     <button
                                         onClick={() => setScopeDropdownOpen(!scopeDropdownOpen)}
-                                        className="w-full px-3 py-2 rounded-md border bg-white/10 text-white flex justify-between items-center hover:border-white/50"
+                                        className="w-full px-3 py-2 rounded-md border bg-white/10 text flex justify-between items-center --secondary-hover"
+                                        style={{border: '1px solid var(--secondary)'}}
                                     >
                                         {RecommendedScopes.find(scope => scope.value === selectedScope)?.label ||
                                         "All recommended scopes"}
@@ -483,18 +495,18 @@ export function PricingOptimizationPage() {
 
                                     {/* drropdown */}
                                     {scopeDropdownOpen && (
-                                        <div className="absolute top-full mt-2 w-full rounded-md border bg-[#1a0b2e] text-white z-30">
-                                        
+                                        <div>
                                         {/* search box */}
-                                        <div className="p-2 border-b border-white/20">
+                                        <div className="p-2" style={{border: 'var(--secondary)'}}>
                                             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-white/5 border border-white/20">
-                                            <Search size={14} className="text-white/60" />
+                                            <Search size={14} className="text-dark" />
                                             <input
                                                 type="text"
                                                 placeholder="Search scopes..."
                                                 value={scopeSearch}
                                                 onChange={(e) => setScopeSearch(e.target.value)}
-                                                className="flex-1 bg-transparent text-sm outline-none placeholder:text-white/40"
+                                                className="flex-1 bg-transparent placeholder:text-dark focus:outline-none"
+                                                style={{ color: 'var(--text-muted)' }}
                                             />
                                             </div>
                                         </div>
@@ -766,6 +778,15 @@ export function PricingOptimizationPage() {
                 )}
 
             </Card>
+
+            {/*toast notification*/}
+            {toast && (
+                <Toast 
+                    message={toast.msg} 
+                    type={toast.type} 
+                    onClose={() => setToast(null)} 
+                />
+            )}
 
             {/* Modals */}
             <Modal

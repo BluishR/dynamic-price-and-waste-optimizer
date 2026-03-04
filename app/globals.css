@@ -68,6 +68,11 @@
   --badge-low-bg: #7F1D1D;
   --badge-low-text: #FEE2E2;
 
+  /* ========== TOAST NOTIFICATIONS ========== */
+  --toast-success-bg: #059669;
+  --toast-error-bg: #DC2626;
+  --toast-info-bg: #2563EB;
+  
   /* ========== LEGACY SUPPORT ========== */
   --background: var(--surface);
   --foreground: var(--text-dark);
