@@ -1,25 +1,24 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { Pencil, Info, ArrowLeft, ChevronDown, Search } from 'lucide-react';
+import { Info, ArrowLeft } from 'lucide-react';
 import { Tooltip } from '@/components/ui/Tooltip';
 
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { RadioGroup } from '@/components/ui/RadioGroup';
 import { Modal } from '@/components/ui/Modal';
+import { PricingTable } from '@/components/pricing/PricingTable';
 import {
     mockPricingProducts,
     PricingProduct,
-    PricingRecommendation,
-    ConfidenceLevel,
     SimulationScenario,
 } from '@/lib/mockPricingProducts';
 
 import Toast from '@/components/toast/Toast';
 import { ToastType } from '@/components/toast/types';
+import { SimulationModal } from '@/components/pricing/SimulationModal';
 
 type PrimaryGoal = 'maximize' | 'reduce' | 'balance';
 type Mode = 'advisor' | 'autopilot';
@@ -81,10 +80,10 @@ export function PricingOptimizationPage() {
     ] = useState(false);
 
     // optional: store the mode the user attempted to switch to (future-proof)
-    const [
-        pendingMode, 
-        setPendingMode
-    ] = useState<Mode | null>(null);
+    // const [
+    //     pendingMode, 
+    //     setPendingMode
+    // ] = useState<Mode | null>(null);
 
     const [products, setProducts] = useState<PricingProduct[]>(mockPricingProducts.products);
 
@@ -101,9 +100,6 @@ export function PricingOptimizationPage() {
      */
 
     const canShowTable = !!primaryGoal && !!mode;
-
-    // Ref for select all checkbox
-    const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
 
     // Derived state
     const allSelected = products.length > 0 && selectedRows.size === products.length;
@@ -134,49 +130,21 @@ export function PricingOptimizationPage() {
     const openModal = (product: PricingProduct) => setActiveProduct(product);
 
     const [toast, setToast] = useState<{ msg: string; type: ToastType } | null>(null);
-    const showToast = (msg: string, type: ToastType) => {
-    setToast({ msg, type });
-  };
-    const handleApplySimulation = 
-        () => {
-            if (!activeProduct || !selectedScenario) return;
+    const handleApplySimulation = (productId: string, newPrice: string) => {
+        setProducts((prevProducts) =>
+            prevProducts.map((product) =>
+                product.id === productId
+                    ? { ...product, currentPrice: newPrice }
+                    : product
+            )
+        );
 
-            const selectedScenarioRow = activeProduct.simulation?.find(
-                (row) => row.scenario === selectedScenario
-            );
-
-            if (!selectedScenarioRow) return;
-
-            const newPrice = selectedScenarioRow.price.toString();
-
-            setProducts((prevProducts) =>
-                prevProducts.map((product) =>
-                    product.id === activeProduct.id
-                        ? { ...product, currentPrice: newPrice }
-                        : product
-                )
-            );
-
-            setActiveProduct({
-                ...activeProduct,
-                currentPrice: newPrice,
-            });
-            
-            setToast({ 
-                msg: `Simulation applied!`, 
-                type: "success" 
-            });
-            
-            console.log('Simulation Applied:', {
-                productId: activeProduct.id,
-                productName: activeProduct.description,
-                selectedScenario,
-                newPrice,
-            });
-
-            closeModal();
-            setSelectedScenario(null);
-        };
+        setToast({ msg: `Simulation applied for product ${productId}!`, type: "success" });
+        console.log('Simulation Applied:', {
+            productId,
+            newPrice,
+        });
+    }
 
     const handleSelectAll = 
         () => {
@@ -212,43 +180,12 @@ export function PricingOptimizationPage() {
             alert('Pricing optimization submitted! Check console for details.');
         };
 
-    // Helper functions
-    const getRecommendationBadgeVariant = 
-        (rec: PricingRecommendation): 'promo' | 'increase' | 'decrease' | 'markdown' => {
-            switch (rec) {
-                case 'promo':
-                    return 'promo';
-                case 'increase':
-                    return 'increase';
-                case 'decrease':
-                    return 'decrease';
-                case 'markdown':
-                    return 'markdown';
-                default:
-                    return 'decrease';
-            }
-        };
-
-        const getConfidenceBadgeVariant = (conf?: ConfidenceLevel): 'high' | 'medium' | 'low' => {
-            switch (conf) {
-                case 'High':
-                    return 'high';
-                case 'Medium':
-                    return 'medium';
-                case 'Low':
-                    return 'low';
-                default:
-                    return 'medium';
-            }
-        };
-
     const handleModeChange = 
         (value: string) => {
             const next = value as Mode;
 
             // If user is trying to enable autopilot, confirm first
             if (next === 'autopilot' && mode !== 'autopilot') {
-                setPendingMode('autopilot');
                 setConfirmAutopilotOpen(true);
                 return; // IMPORTANT: do not setMode yet
             }
@@ -260,13 +197,11 @@ export function PricingOptimizationPage() {
     const handleConfirmAutopilot = 
         () => {
             setMode('autopilot');
-            setPendingMode(null);
             setConfirmAutopilotOpen(false);
         };
 
     const handleCloseAutopilotConfirm = 
         () => {
-            setPendingMode(null);
             setConfirmAutopilotOpen(false);
         };
 
@@ -288,14 +223,7 @@ export function PricingOptimizationPage() {
         }
     }, [activeProduct]);
 
-
-  // Effect to set indeterminate state on checkbox
-    useEffect(() => {
-        if (selectAllCheckboxRef.current) {
-            selectAllCheckboxRef.current.indeterminate = someSelected;
-        }
-        }, [someSelected]);
-            const handleToggleRow = (productId: string) => {
+    const handleToggleRow = (productId: string) => {
                 setSelectedRows((prev) => {
                     const newSet = new Set(prev);
                     if (newSet.has(productId)) {
@@ -321,7 +249,7 @@ export function PricingOptimizationPage() {
             } else {
                 setProducts(mockPricingProducts.products); // fallback if empty
             }
-            } catch (e) {
+            } catch {
             setProducts(mockPricingProducts.products); // fallback if error
             }
     };
@@ -470,270 +398,34 @@ export function PricingOptimizationPage() {
             
                 {canShowTable ? (
                 <>
-                    <div className="overflow-x-auto">
-                        {/* recommended scope filter */}
-                            <div>
-                                <div className="mb-4">
-                                <div className="p-6 rounded-xl" style={{ backgroundColor: 'var(--secondary-light-bg)', border: '1px solid var(--secondary)' }}>
-                                    <label className="font-semibold text-dark">Recommended Scope</label>
+                    <PricingTable
+                      products={products}
+                      selectedRows={selectedRows}
+                      userAdjustedPrices={userAdjustedPrices}
+                      selectedScope={selectedScope}
+                      scopeDropdownOpen={scopeDropdownOpen}
+                      scopeSearch={scopeSearch}
+                      allSelected={allSelected}
+                      someSelected={someSelected}
+                      recommendedScopes={RecommendedScopes}
+                      filteredScopes={filteredScopes}
+                      onToggleRow={handleToggleRow}
+                      onSelectAll={handleSelectAll}
+                      onPriceChange={handlePriceChange}
+                      onOpenModal={openModal}
+                      onScopeDropdownToggle={setScopeDropdownOpen}
+                      onScopeSearch={setScopeSearch}
+                      onScopeChange={setSelectedScope}
+                    />
 
-                                    <div className="relative mt-2">
-                                    {/* dropdown button */}
-                                    <button
-                                        onClick={() => setScopeDropdownOpen(!scopeDropdownOpen)}
-                                        className="w-full px-3 py-2 rounded-md border bg-white/10 text flex justify-between items-center --secondary-hover"
-                                        style={{border: '1px solid var(--secondary)'}}
-                                    >
-                                        {RecommendedScopes.find(scope => scope.value === selectedScope)?.label ||
-                                        "All recommended scopes"}
+                     <SimulationModal
+                        activeProduct={activeProduct}
+                        onClose={closeModal}
+                        onApply={handleApplySimulation}
+                        onToast={(msg: string, type: ToastType) => setToast({ msg, type })}
+                    />
 
-                                        <ChevronDown
-                                        size={16}
-                                        className={`${scopeDropdownOpen ? "rotate-180" : ""} transition-transform`}
-                                        />
-                                    </button>
-
-                                    {/* drropdown */}
-                                    {scopeDropdownOpen && (
-                                        <div>
-                                        {/* search box */}
-                                        <div className="p-2" style={{border: 'var(--secondary)'}}>
-                                            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-white/5 border border-white/20">
-                                            <Search size={14} className="text-dark" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search scopes..."
-                                                value={scopeSearch}
-                                                onChange={(e) => setScopeSearch(e.target.value)}
-                                                className="flex-1 bg-transparent placeholder:text-dark focus:outline-none"
-                                                style={{ color: 'var(--text-muted)' }}
-                                            />
-                                            </div>
-                                        </div>
-
-                                        {/* liist items */}
-                                        <div className="max-h-40 overflow-y-auto">
-                                            {filteredScopes.map((scope) => (
-                                            <button
-                                                key={scope.value}
-                                                onClick={() => {
-                                                setSelectedScope(scope.value);
-                                                setScopeDropdownOpen(false);
-                                                setScopeSearch("");
-                                                }}
-                                                className={`w-full text-left px-4 py-2 text-sm ${
-                                                selectedScope === scope.value
-                                                    ? "bg-violet-600/30 text-white font-medium"
-                                                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                                                }`}
-                                            >
-                                                {scope.label}
-                                            </button>
-                                            ))}
-                                        </div>
-                                        </div>
-                                    )}
-                                    </div>
-                                </div>
-                            </div>
-                    </div>
-                        <div className="overflow-x-auto">
-                        <table className="w-full table-auto">
-                        {/* Table Header */}
-                        <thead>
-                            <tr className="border-b" style={{ 
-                            borderColor: 'var(--border)', 
-                            backgroundColor: 'var(--primary)',
-                            background: 'linear-gradient(135deg, var(--primary) 0%, rgb(13, 71, 161) 100%)',
-                            }}>
-                            <th className="px-4 py-3 text-left">
-                                <input
-                                ref={selectAllCheckboxRef}
-                                type="checkbox"
-                                checked={allSelected}
-                                onChange={handleSelectAll}
-                                onClick={(e) => e.stopPropagation()}
-                                aria-label="Select all products"
-                                className="w-4 h-4 rounded"
-                                style={{ accentColor: 'var(--primary-light-bg)' }}
-                                />
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                Product
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                AI Recommendation
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                Recommended Scope
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                Current Price
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                Recommended Price
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                User Adjusted Price
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                Reason
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                Expected Impact
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                Confidence
-                            </th>
-                            </tr>
-                        </thead>
-
-                        {/* Table Body */}
-                        <tbody>
-                            {products.filter(product => {
-                                if (selectedScope === 'all') return true;
-                                return product.recommendedScope.level === selectedScope;
-                            }).map((product, index) => {
-                            const isSelected = selectedRows.has(product.id);
-                            const userPrice = userAdjustedPrices[product.id] || '';
-
-                            return (
-                                    <tr
-                                        key={product.id}
-                                        className={`border-b transition-colors cursor-pointer ${
-                                            index === products.length - 1 ? 'border-b-0' : ''
-                                        }`}
-                                        style={{
-                                            borderColor: 'var(--border)',
-                                            backgroundColor: isSelected ? 'rgba(59,130,246,0.12)' : 'transparent',
-                                        }}
-                                        onClick={() => openModal(product)}
-                                        onMouseEnter={(e) =>
-                                            !isSelected && (e.currentTarget.style.backgroundColor = 'var(--surface-hover)')
-                                        }
-                                        onMouseLeave={(e) =>
-                                            !isSelected && (e.currentTarget.style.backgroundColor = 'transparent')
-                                        }
-                                        role="button"
-                                        tabIndex={0}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            openModal(product);
-                                            }
-                                        }}
-                                    >
-                                {/* Checkbox */}
-                                <td className="px-4 py-3">
-                                    <input
-                                        type="checkbox"
-                                        checked={isSelected}
-                                        onChange={() => handleToggleRow(product.id)}
-                                        onClick={(e) => e.stopPropagation()}
-                                        aria-label={`Select ${product.description}`}
-                                        className="w-4 h-4 rounded"
-                                        style={{ accentColor: 'var(--primary)' }}
-                                    />
-                                </td>
-
-                                {/* Product */}
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-3">
-                                    <img
-                                        src={product.imageUrl}
-                                        alt={product.description}
-                                        className="w-10 h-10 rounded-full object-cover"
-                                    />
-                                    <span className="font-medium" style={{ color: 'var(--text-dark)' }}>
-                                        {product.description}
-                                    </span>
-                                    </div>
-                                </td>
-
-                                {/* AI Recommendation */}
-                                <td className="px-4 py-3">
-                                    <Badge
-                                    variant={getRecommendationBadgeVariant(
-                                        product.action
-                                    )}
-                                    >
-                                    {product.action}
-                                    </Badge>
-                                </td>
-
-                                {/* Recommended Scope */}
-                                <td className="px-4 py-3">
-                                    {product.recommendedScope.level}
-                                </td>
-
-                                {/* Current Price */}
-                                <td className="px-4 py-3 font-medium" style={{ color: 'var(--text-dark)' }}>
-                                    {product.currentPrice}
-                                </td>
-
-                                {/* Recommended Price */}
-                                <td className="px-4 py-3 font-medium" style={{ color: 'var(--text-dark)' }}>
-                                    {product.finalRecommendedPrice}
-                                </td>
-
-                                {/* User Adjusted Price */}
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                    <input
-                                        type="text"
-                                        value={userPrice}
-                                        onChange={(e) =>
-                                        handlePriceChange(product.id, e.target.value)
-                                        }
-                                        onClick={(e) => e.stopPropagation()}
-                                        onKeyDown={(e) => e.stopPropagation()}
-                                        placeholder="Enter price"
-                                        className="w-24 px-3 py-1 rounded border text-sm focus:outline-none"
-                                        style={{
-                                        borderColor: 'var(--border)',
-                                        backgroundColor: 'var(--surface)',
-                                        color: 'var(--text)',
-                                        boxShadow: 'none',
-                                        }}
-                                        onFocus={(e) => {
-                                        e.currentTarget.style.boxShadow = `0 0 0 2px var(--ring)`;
-                                        e.currentTarget.style.borderColor = 'transparent';
-                                        }}
-                                        onBlur={(e) => {
-                                        e.currentTarget.style.boxShadow = 'none';
-                                        e.currentTarget.style.borderColor = 'var(--border)';
-                                        }}
-                                    />
-                                    <Pencil className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                                    </div>
-                                </td>
-
-                                {/* Reason */}
-                                <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
-                                    {product.reasonSignals}
-                                </td>
-
-                                {/* Expected Impact */}
-                                <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
-                                    {product.expectedImpact}
-                                </td>
-
-                                {/* Confidence */}
-                                <td className="px-4 py-3">
-                                    <Badge
-                                    variant={getConfidenceBadgeVariant(product.confidence)}
-                                    >
-                                    {product.confidence}
-                                    </Badge>
-                                </td>
-                                </tr>
-                            );
-                            })}
-                        </tbody>
-                        </table>
-                    </div>
-                    </div>
-
+                    
                     {/* Footer with Action Button */}
                     <div className="mt-8 pt-6 flex justify-end" style={{ borderTop: '1px solid var(--border)' }}>
                         <button
@@ -779,6 +471,7 @@ export function PricingOptimizationPage() {
 
             </Card>
 
+            
             {/*toast notification*/}
             {toast && (
                 <Toast 
@@ -788,173 +481,6 @@ export function PricingOptimizationPage() {
                 />
             )}
 
-            {/* Modals */}
-            <Modal
-                open={!!activeProduct}
-                title={activeProduct?.description}
-                onClose={closeModal}
-                >
-                {activeProduct && (
-                    <div className="space-y-6">
-                    {/* Top section: image left, explanation right */}
-                    <div className="flex flex-col sm:flex-row gap-5 items-start">
-                        <img
-                        src={activeProduct.imageUrl}
-                        alt={activeProduct.description}
-                        className="w-48 h-48 rounded-xl object-cover shrink-0"
-                        style={{ backgroundColor: 'var(--surface-2)' }}
-                        />
-
-                        <div className="min-w-0 flex-1">
-                        <p
-                            className="text-sm font-semibold mb-2"
-                            style={{ color: 'var(--text-dark)' }}
-                        >
-                            Explanation
-                        </p>
-
-                        <p
-                            className="text-sm leading-relaxed"
-                            style={{ color: 'var(--text-muted)' }}
-                        >
-                            {activeProduct.explanation}
-                        </p>
-                        </div>
-                    </div>
-
-                    {/* Simulation section */}
-                    <div className="space-y-3">
-                        <p
-                        className="text-sm font-semibold"
-                        style={{ color: 'var(--text-dark)' }}
-                        >
-                        Simulation
-                        </p>
-
-                        <div
-                        className="rounded-xl overflow-hidden"
-                        style={{ border: '1px solid var(--border)', backgroundColor: 'var(--surface)' }}
-                        >
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                            <thead>
-                                <tr
-                                className="border-b"
-                                style={{
-                                    borderColor: 'var(--border)',
-                                    backgroundColor: 'var(--primary)',
-                                    background:
-                                    'linear-gradient(135deg, var(--primary) 0%, rgb(13, 71, 161) 100%)',
-                                }}
-                                >
-                                <th className="px-4 py-3 text-left w-10" />
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                    Scenario
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                    Revenue
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                    Margin
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'white' }}>
-                                    Waste
-                                </th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {(activeProduct.simulation ?? []).map((row) => {
-                                const checked = selectedScenario === row.scenario;
-
-                                return (
-                                    <tr
-                                    key={row.scenario}
-                                    className="border-b last:border-b-0 transition-colors"
-                                    style={{
-                                        borderColor: 'var(--border)',
-                                        backgroundColor: checked ? 'rgba(59,130,246,0.12)' : 'transparent',
-                                    }}
-                                    onClick={() => setSelectedScenario(row.scenario)}
-                                    role="button"
-                                    tabIndex={0}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        setSelectedScenario(row.scenario);
-                                        }
-                                    }}
-                                    >
-                                    <td className="px-4 py-3">
-                                        {/* Checkbox UI but single-select behavior */}
-                                        <input
-                                        type="checkbox"
-                                        checked={checked}
-                                        onChange={() => setSelectedScenario(row.scenario)}
-                                        onClick={(e) => e.stopPropagation()}
-                                        aria-label={`Select ${row.scenario}`}
-                                        className="w-4 h-4 rounded"
-                                        style={{ accentColor: 'var(--primary)' }}
-                                        />
-                                    </td>
-
-                                    <td className="px-4 py-3 font-medium" style={{ color: 'var(--text-dark)' }}>
-                                        {row.scenario}
-                                    </td>
-
-                                    <td className="px-4 py-3" style={{ color: 'var(--text-dark)' }}>
-                                        {row.revenue}
-                                    </td>
-
-                                    <td className="px-4 py-3" style={{ color: 'var(--text-dark)' }}>
-                                        {row.margin}
-                                    </td>
-
-                                    <td className="px-4 py-3" style={{ color: 'var(--text-dark)' }}>
-                                        {row.waste}
-                                    </td>
-                                    </tr>
-                                );
-                                })}
-                            </tbody>
-                            </table>
-                        </div>
-                        </div>
-
-                        {/* Apply button */}
-                        <div className="flex justify-end">
-                        <button
-                            type="button"
-                            onClick={handleApplySimulation}
-                            disabled={!selectedScenario}
-                            className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                            !selectedScenario ? 'cursor-not-allowed' : 'active:scale-95'
-                            }`}
-                            style={{
-                            backgroundColor: !selectedScenario ? 'var(--secondary-light)' : 'var(--primary)',
-                            color: !selectedScenario ? 'var(--text-muted)' : 'var(--primary-foreground)',
-                            boxShadow: !selectedScenario ? 'none' : 'var(--shadow)',
-                            }}
-                            onMouseEnter={(e) => {
-                            if (selectedScenario) {
-                                e.currentTarget.style.backgroundColor = 'var(--primary-hover)';
-                                e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                            }
-                            }}
-                            onMouseLeave={(e) => {
-                            if (selectedScenario) {
-                                e.currentTarget.style.backgroundColor = 'var(--primary)';
-                                e.currentTarget.style.boxShadow = 'var(--shadow)';
-                            }
-                            }}
-                        >
-                            Apply
-                        </button>
-                        </div>
-                    </div>
-                    </div>
-                )}
-            </Modal>
 
             <Modal
                 open={confirmAutopilotOpen}
