@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { Pencil, Check, X } from 'lucide-react';
-import { Item } from '@/lib/mockItems';
+import { useState, useRef } from "react";
+import { Pencil, Check, X } from "lucide-react";
+import { Item } from "@/lib/mockItems";
 
 interface PriceTableProps {
   items: Item[];
@@ -15,18 +15,28 @@ interface PriceTableProps {
   onSearchChange: (value: string) => void;
 }
 
-export function PriceTable({
-  items,
-  action,
-  selectedRowId,
-  onSelectRow,
-  onPriceChange,
-  edits,
-  search,
-  onSearchChange,
-}: PriceTableProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState('');
+export function PriceTable(props: PriceTableProps) {
+  const {
+    items,
+    action,
+    selectedRowId,
+    onSelectRow,
+    onPriceChange,
+    edits,
+    search,
+    onSearchChange,
+  } = props;
+
+  const [
+    editingId, 
+    setEditingId
+  ] = useState<string | null>(null);
+
+  const [
+    editValue, 
+    setEditValue
+  ] = useState("");
+  
   const editInputRef = useRef<HTMLInputElement>(null);
 
   const filteredItems = items.filter((item) => {
@@ -62,13 +72,13 @@ export function PriceTable({
 
   const handleEditCancel = () => {
     setEditingId(null);
-    setEditValue('');
+    setEditValue("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, itemId: string) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleEditSave(itemId);
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       handleEditCancel();
     }
   };
@@ -102,20 +112,48 @@ export function PriceTable({
                 <th className="px-4 py-3 text-left font-semibold text-white/90 w-12">
                   Select
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-white/90">Department</th>
-                <th className="px-4 py-3 text-left font-semibold text-white/90">Region</th>
-                <th className="px-4 py-3 text-left font-semibold text-white/90">Item Code</th>
-                <th className="px-4 py-3 text-left font-semibold text-white/90">Item Name</th>
-                <th className="px-4 py-3 text-left font-semibold text-white/90">Item Description</th>
-                <th className="px-4 py-3 text-right font-semibold text-white/90">CP ($)</th>
-                <th className="px-4 py-3 text-right font-semibold text-white/90">Original RP ($)</th>
-                <th className="px-4 py-3 text-right font-semibold text-white bg-violet-500/25 border-l border-r border-violet-400/40 rounded-lg">Optimized RP ($)</th>
-                <th className="px-4 py-3 text-right font-semibold text-white/90">% Change</th>
-                <th className="px-4 py-3 text-right font-semibold text-white bg-emerald-500/25 border-l border-r border-emerald-400/40 rounded-lg">User Adjusted Price ($)</th>
-                <th className="px-4 py-3 text-right font-semibold text-white/90">Weekly Unit CP</th>
-                <th className="px-4 py-3 text-right font-semibold text-white/90">Weekly Unit RP</th>
-                <th className="px-4 py-3 text-right font-semibold text-white/90">Weekly Profit CP ($)</th>
-                <th className="px-4 py-3 text-right font-semibold text-white/90">Weekly Optimized Profit RP ($)</th>
+                <th className="px-4 py-3 text-left font-semibold text-white/90">
+                  Department
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-white/90">
+                  Region
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-white/90">
+                  Item Code
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-white/90">
+                  Item Name
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-white/90">
+                  Item Description
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-white/90">
+                  CP ($)
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-white/90">
+                  Original RP ($)
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-white bg-violet-500/25 border-l border-r border-violet-400/40 rounded-lg">
+                  Optimized RP ($)
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-white/90">
+                  % Change
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-white bg-emerald-500/25 border-l border-r border-emerald-400/40 rounded-lg">
+                  User Adjusted Price ($)
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-white/90">
+                  Weekly Unit CP
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-white/90">
+                  Weekly Unit RP
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-white/90">
+                  Weekly Profit CP ($)
+                </th>
+                <th className="px-4 py-3 text-right font-semibold text-white/90">
+                  Weekly Optimized Profit RP ($)
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -125,30 +163,41 @@ export function PriceTable({
                 const percentChange = getPercentChange(item.id, item.rp);
                 const weeklyCostRevenue = item.weeklyUnits * item.cp;
                 const weeklyUserRevenue = item.weeklyUnits * userPrice;
-                const weeklyProfit = item.weeklyUnits * Math.max(userPrice - item.cp, 0);
+                const weeklyProfit =
+                  item.weeklyUnits * Math.max(userPrice - item.cp, 0);
 
                 return (
                   <tr
                     key={item.id}
                     className={`border-b border-white/5 transition-all duration-300 ${
-                      isSelected
-                        ? 'bg-violet-500/20'
-                        : 'hover:bg-white/5'
+                      isSelected ? "bg-violet-500/20" : "hover:bg-white/5"
                     }`}
                   >
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => onSelectRow(isSelected ? null : item.id)}
+                        onChange={() =>
+                          onSelectRow(isSelected ? null : item.id)
+                        }
                         className="w-4 h-4 rounded cursor-pointer accent-violet-500"
                       />
                     </td>
-                    <td className="px-4 py-3 text-white/90">{item.departmentDescription}</td>
-                    <td className="px-4 py-3 text-white/80 capitalize">{item.region}</td>
-                    <td className="px-4 py-3 text-white/80 font-mono text-xs">{item.item}</td>
-                    <td className="px-4 py-3 text-white/90 font-medium">{item.itemName}</td>
-                    <td className="px-4 py-3 text-white/70 text-xs">{item.itemDescription}</td>
+                    <td className="px-4 py-3 text-white/90">
+                      {item.departmentDescription}
+                    </td>
+                    <td className="px-4 py-3 text-white/80 capitalize">
+                      {item.region}
+                    </td>
+                    <td className="px-4 py-3 text-white/80 font-mono text-xs">
+                      {item.item}
+                    </td>
+                    <td className="px-4 py-3 text-white/90 font-medium">
+                      {item.itemName}
+                    </td>
+                    <td className="px-4 py-3 text-white/70 text-xs">
+                      {item.itemDescription}
+                    </td>
                     <td className="px-4 py-3 text-right text-white/90 font-mono">
                       ${item.cp.toFixed(2)}
                     </td>
@@ -158,10 +207,17 @@ export function PriceTable({
                     <td className="px-4 py-3 text-right text-white font-mono font-semibold bg-violet-500/20 border-l border-r border-violet-400/30">
                       ${item.rp.toFixed(2)}
                     </td>
-                    <td className={`px-4 py-3 text-right font-mono text-sm ${
-                      percentChange > 0 ? 'text-emerald-400' : percentChange < 0 ? 'text-rose-400' : 'text-white/80'
-                    }`}>
-                      {percentChange > 0 ? '+' : ''}{percentChange.toFixed(2)}%
+                    <td
+                      className={`px-4 py-3 text-right font-mono text-sm ${
+                        percentChange > 0
+                          ? "text-emerald-400"
+                          : percentChange < 0
+                            ? "text-rose-400"
+                            : "text-white/80"
+                      }`}
+                    >
+                      {percentChange > 0 ? "+" : ""}
+                      {percentChange.toFixed(2)}%
                     </td>
                     <td className="px-4 py-3 text-right bg-emerald-500/15 border-l border-r border-emerald-400/25">
                       {editingId === item.id ? (
@@ -191,7 +247,9 @@ export function PriceTable({
                         </div>
                       ) : (
                         <div className="flex items-center justify-end gap-2 group">
-                          <span className="text-white font-mono font-semibold">${userPrice.toFixed(2)}</span>
+                          <span className="text-white font-mono font-semibold">
+                            ${userPrice.toFixed(2)}
+                          </span>
                           <button
                             onClick={() => handleEditStart(item.id, userPrice)}
                             className="text-emerald-400 hover:text-emerald-300 hover:scale-110 transition-all duration-200 opacity-80 group-hover:opacity-100"

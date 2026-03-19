@@ -11,8 +11,8 @@ const HeroLanding: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden hero-bg relative">
-      <style>{`
+    <main className="max-h-screen hero-bg relative">
+      <style>{`s
         /* ===============================
           GAMIFIED HERO BACKGROUND
         ================================ */

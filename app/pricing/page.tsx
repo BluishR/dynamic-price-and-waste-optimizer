@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, BarChart3 } from 'lucide-react';
 import { mockItems, filterItems } from '@/lib/mockItems';
 import { FilterBar } from '@/components/pricing/FilterBar';
-import { PriceTable } from '@/components/pricing/PriceTable';
+import { PriceTable } from '@/components/pricing/SimulationTable';
 import { PricingOptimizationPage } from '@/components/pricing/PricingOptimizationPage';
 
 export default function PricingPage() {

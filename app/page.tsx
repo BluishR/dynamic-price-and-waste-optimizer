@@ -1,4 +1,4 @@
-import HeroLanding from '@/components/landing/HeroLanding';
+import HeroLanding from '@/components/landing/LandingPage';
 
 export default function LandingPage() {
   return <HeroLanding />;
